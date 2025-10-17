@@ -13,8 +13,10 @@ RUN apt-get update && apt-get install -y \
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --legacy-peer-deps
+# Remove package-lock and install with correct versions
+RUN rm -f package-lock.json && \
+    npm install --legacy-peer-deps && \
+    npm install typescript@5.3.3 --save-dev --legacy-peer-deps
 
 # Copy source code
 COPY . .
@@ -31,7 +33,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --omit=dev --legacy-peer-deps
+RUN rm -f package-lock.json && \
+    npm install --omit=dev --legacy-peer-deps
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
