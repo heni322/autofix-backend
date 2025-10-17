@@ -517,9 +517,9 @@ export async function seedCategories(dataSource: DataSource) {
     console.log(`      ✅ Created: ${servicesCreated}`);
     console.log(`      ⏭️  Skipped: ${servicesSkipped}`);
     console.log('\n🎉 Categories and services seeding completed!');
-
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     console.error('❌ Error during seeding:', errorMessage);
     throw error;
   }

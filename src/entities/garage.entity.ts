@@ -5,7 +5,6 @@ import { GarageService } from './garage-service.entity';
 import { Reservation } from './reservation.entity';
 import { Review } from './review.entity';
 
-
 @Entity('garages')
 export class Garage extends BaseEntity {
   @Column()
@@ -56,15 +55,15 @@ export class Garage extends BaseEntity {
   @Index()
   ownerId!: number;
 
-  @ManyToOne(() => User, user => user.garages)
+  @ManyToOne(() => User, (user) => user.garages)
   owner!: User;
 
-  @OneToMany(() => GarageService, gs => gs.garage, { cascade: true })
+  @OneToMany(() => GarageService, (gs) => gs.garage, { cascade: true })
   garageServices!: GarageService[];
 
-  @OneToMany(() => Reservation, reservation => reservation.garage)
+  @OneToMany(() => Reservation, (reservation) => reservation.garage)
   reservations!: Reservation[];
 
-  @OneToMany(() => Review, review => review.garage)
+  @OneToMany(() => Review, (review) => review.garage)
   reviews!: Review[];
 }

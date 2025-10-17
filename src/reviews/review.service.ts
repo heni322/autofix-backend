@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Review } from '../entities/review.entity';
@@ -79,7 +84,11 @@ export class ReviewService {
     });
   }
 
-  async update(id: string, userId: number, updateReviewDto: UpdateReviewDto): Promise<Review> {
+  async update(
+    id: string,
+    userId: number,
+    updateReviewDto: UpdateReviewDto,
+  ): Promise<Review> {
     const review = await this.findOne(id);
 
     // Check if user owns this review
@@ -88,7 +97,10 @@ export class ReviewService {
     }
 
     // Validate rating if provided
-    if (updateReviewDto.rating && (updateReviewDto.rating < 1 || updateReviewDto.rating > 5)) {
+    if (
+      updateReviewDto.rating &&
+      (updateReviewDto.rating < 1 || updateReviewDto.rating > 5)
+    ) {
       throw new BadRequestException('Rating must be between 1 and 5');
     }
 
@@ -125,7 +137,7 @@ export class ReviewService {
     });
 
     const totalReviews = reviews.length;
-    
+
     if (totalReviews === 0) {
       return {
         averageRating: 0,
@@ -152,7 +164,10 @@ export class ReviewService {
     };
   }
 
-  async hasUserReviewedGarage(userId: number, garageId: number): Promise<boolean> {
+  async hasUserReviewedGarage(
+    userId: number,
+    garageId: number,
+  ): Promise<boolean> {
     const review = await this.reviewRepository.findOne({
       where: { userId, garageId },
     });

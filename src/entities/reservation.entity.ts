@@ -27,7 +27,11 @@ export class Reservation extends BaseEntity {
   @Column({ type: 'timestamp' })
   endTime!: Date;
 
-  @Column({ type: 'enum', enum: ReservationStatus, default: ReservationStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: ReservationStatus,
+    default: ReservationStatus.PENDING,
+  })
   @Index()
   status!: ReservationStatus;
 
@@ -52,12 +56,12 @@ export class Reservation extends BaseEntity {
   @Column({ type: 'timestamp', nullable: true })
   cancelledAt!: Date;
 
-  @ManyToOne(() => User, user => user.reservations)
+  @ManyToOne(() => User, (user) => user.reservations)
   user!: User;
 
-  @ManyToOne(() => Garage, garage => garage.reservations)
+  @ManyToOne(() => Garage, (garage) => garage.reservations)
   garage!: Garage;
 
-  @ManyToOne(() => Service, service => service.reservations)
+  @ManyToOne(() => Service, (service) => service.reservations)
   service!: Service;
 }

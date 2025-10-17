@@ -51,7 +51,9 @@ export class ServiceController {
   }
 
   @Get('category-stats')
-  async getServiceCountByCategory(): Promise<{ categoryId: number; categoryName: string; count: number }[]> {
+  async getServiceCountByCategory(): Promise<
+    { categoryId: number; categoryName: string; count: number }[]
+  > {
     return await this.serviceService.countServicesByCategory();
   }
 
@@ -63,9 +65,7 @@ export class ServiceController {
   }
 
   @Get('search')
-  async searchByName(
-    @Query('name') name: string,
-  ): Promise<Service[]> {
+  async searchByName(@Query('name') name: string): Promise<Service[]> {
     return await this.serviceService.findByName(name);
   }
 

@@ -57,15 +57,18 @@ export class ReservationController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new reservation' })
-  create(@Body() createDto: CreateReservationDto, @Request() req: ExpressRequest & { user: Express.User }) {
+  create(
+    @Body() createDto: CreateReservationDto,
+    @Request() req: ExpressRequest & { user: Express.User },
+  ) {
     // Ensure user is authenticated
     if (!req.user || !req.user.id) {
       throw new BadRequestException('User authentication required');
     }
-    
+
     // Set userId from JWT token (overrides any value from request body)
     createDto.userId = req.user.id;
-    
+
     return this.reservationService.create(createDto);
   }
 
@@ -79,17 +82,17 @@ export class ReservationController {
     @Request() req?: ExpressRequest & { user: Express.User },
   ) {
     const filters: any = {};
-    
+
     // Users can only see their own reservations
     if (req && req.user && req.user.role === UserRole.CLIENT) {
       filters.userId = req.user.id;
     } else if (userId) {
       filters.userId = userId;
     }
-    
+
     if (garageId) filters.garageId = garageId;
     if (status) filters.status = status;
-    
+
     return this.reservationService.findAll(filters);
   }
 
@@ -126,7 +129,10 @@ export class ReservationController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Accept a provided quote' })
-  acceptQuote(@Param('id', ParseIntPipe) id: number, @Request() req: ExpressRequest & { user: Express.User }) {
+  acceptQuote(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: ExpressRequest & { user: Express.User },
+  ) {
     return this.reservationService.acceptQuote(id, req.user.id);
   }
 

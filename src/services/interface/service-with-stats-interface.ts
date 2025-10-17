@@ -1,4 +1,4 @@
-import { Service } from "src/entities/service.entity";
+import { Service } from 'src/entities/service.entity';
 
 export interface ServiceWithStats {
   service: Service;

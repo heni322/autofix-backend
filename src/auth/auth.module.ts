@@ -8,7 +8,6 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from 'src/common/strategies/jwt-auth.strategy';
 import { LocalStrategy } from 'src/common/strategies/local.strategy';
 
-
 @Module({
   imports: [
     UsersModule,

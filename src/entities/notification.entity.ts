@@ -7,7 +7,7 @@ export enum NotificationType {
   RESERVATION_CANCELLED = 'RESERVATION_CANCELLED',
   QUOTE_PROVIDED = 'QUOTE_PROVIDED',
   REMINDER = 'REMINDER',
-  REVIEW_REQUEST = 'REVIEW_REQUEST'
+  REVIEW_REQUEST = 'REVIEW_REQUEST',
 }
 
 @Entity('notifications')
@@ -18,7 +18,7 @@ export class Notification extends BaseEntity {
 
   @Column({
     type: 'enum',
-    enum: NotificationType
+    enum: NotificationType,
   })
   type!: NotificationType;
 

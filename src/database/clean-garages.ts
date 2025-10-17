@@ -37,7 +37,9 @@ async function cleanGarages() {
     await AppDataSource.initialize();
     console.log('✅ Database connection established\n');
 
-    const answer = await askQuestion('Are you sure you want to continue? (yes/no): ');
+    const answer = await askQuestion(
+      'Are you sure you want to continue? (yes/no): ',
+    );
 
     if (answer.toLowerCase() !== 'yes') {
       console.log('❌ Operation cancelled');
@@ -47,11 +49,13 @@ async function cleanGarages() {
     }
 
     const garageRepository = AppDataSource.getRepository('Garage');
-    
+
     const count = await garageRepository.count();
     console.log(`\n📊 Found ${count} garages to delete\n`);
 
-    const confirm = await askQuestion(`Delete ${count} garages? Type 'DELETE' to confirm: `);
+    const confirm = await askQuestion(
+      `Delete ${count} garages? Type 'DELETE' to confirm: `,
+    );
 
     if (confirm !== 'DELETE') {
       console.log('❌ Operation cancelled');
@@ -66,9 +70,9 @@ async function cleanGarages() {
     rl.close();
     await AppDataSource.destroy();
     process.exit(0);
-
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     console.error('❌ Error during cleanup:', errorMessage);
     if (error instanceof Error && error.stack) {
       console.error('Stack trace:', error.stack);

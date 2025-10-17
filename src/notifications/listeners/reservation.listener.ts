@@ -3,7 +3,6 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { EmailService } from '../services/email.service';
 import { SmsService } from '../services/sms.service';
 
-
 @Injectable()
 export class ReservationListener {
   private readonly logger = new Logger(ReservationListener.name);
@@ -16,14 +15,16 @@ export class ReservationListener {
   @OnEvent('reservation.created')
   async handleReservationCreated(payload: { reservation: any }) {
     this.logger.log(`Reservation created: ${payload.reservation.id}`);
-    
+
     try {
       // Send confirmation email to user
       await this.emailService.sendReservationConfirmation(payload.reservation);
-      
+
       // Notify garage owner
-      await this.emailService.sendNewReservationNotification(payload.reservation);
-      
+      await this.emailService.sendNewReservationNotification(
+        payload.reservation,
+      );
+
       // Send SMS if phone number available
       if (payload.reservation.user?.phone) {
         await this.smsService.sendReservationConfirmation(payload.reservation);
@@ -35,11 +36,13 @@ export class ReservationListener {
 
   @OnEvent('quote.provided')
   async handleQuoteProvided(payload: { reservation: any }) {
-    this.logger.log(`Quote provided for reservation: ${payload.reservation.id}`);
-    
+    this.logger.log(
+      `Quote provided for reservation: ${payload.reservation.id}`,
+    );
+
     try {
       await this.emailService.sendQuoteNotification(payload.reservation);
-      
+
       if (payload.reservation.user?.phone) {
         await this.smsService.sendQuoteNotification(payload.reservation);
       }
@@ -51,9 +54,11 @@ export class ReservationListener {
   @OnEvent('reservation.confirmed')
   async handleReservationConfirmed(payload: { reservation: any }) {
     this.logger.log(`Reservation confirmed: ${payload.reservation.id}`);
-    
+
     try {
-      await this.emailService.sendReservationConfirmedEmail(payload.reservation);
+      await this.emailService.sendReservationConfirmedEmail(
+        payload.reservation,
+      );
     } catch (error) {
       this.logger.error('Failed to send confirmation', error);
     }
@@ -62,7 +67,7 @@ export class ReservationListener {
   @OnEvent('reservation.completed')
   async handleReservationCompleted(payload: { reservation: any }) {
     this.logger.log(`Reservation completed: ${payload.reservation.id}`);
-    
+
     try {
       // Request review
       await this.emailService.sendReviewRequest(payload.reservation);
@@ -74,7 +79,7 @@ export class ReservationListener {
   @OnEvent('reservation.cancelled')
   async handleReservationCancelled(payload: { reservation: any }) {
     this.logger.log(`Reservation cancelled: ${payload.reservation.id}`);
-    
+
     try {
       await this.emailService.sendCancellationNotification(payload.reservation);
     } catch (error) {

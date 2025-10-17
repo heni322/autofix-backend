@@ -6,7 +6,6 @@ import { Garage } from './garage.entity';
 import { Reservation } from './reservation.entity';
 import { Review } from './review.entity';
 
-
 @Entity('users')
 export class User extends BaseEntity {
   @Column({ unique: true })
@@ -38,12 +37,12 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   refreshToken!: string;
 
-  @OneToMany(() => Garage, garage => garage.owner)
+  @OneToMany(() => Garage, (garage) => garage.owner)
   garages!: Garage[];
 
-  @OneToMany(() => Reservation, reservation => reservation.user)
+  @OneToMany(() => Reservation, (reservation) => reservation.user)
   reservations!: Reservation[];
 
-  @OneToMany(() => Review, review => review.user)
+  @OneToMany(() => Review, (review) => review.user)
   reviews!: Review[];
 }

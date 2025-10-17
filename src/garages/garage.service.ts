@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Garage } from '../entities/garage.entity';
@@ -50,28 +54,38 @@ export class GarageService {
     if (filters?.search) {
       query.andWhere(
         '(LOWER(garage.name) LIKE LOWER(:search) OR LOWER(garage.address) LIKE LOWER(:search) OR LOWER(garage.description) LIKE LOWER(:search))',
-        { search: `%${filters.search}%` }
+        { search: `%${filters.search}%` },
       );
     }
 
     if (filters?.city) {
-      query.andWhere('LOWER(garage.city) LIKE LOWER(:city)', { city: `%${filters.city}%` });
+      query.andWhere('LOWER(garage.city) LIKE LOWER(:city)', {
+        city: `%${filters.city}%`,
+      });
     }
 
     if (filters?.isActive !== undefined) {
-      query.andWhere('garage.isActive = :isActive', { isActive: filters.isActive });
+      query.andWhere('garage.isActive = :isActive', {
+        isActive: filters.isActive,
+      });
     }
 
     if (filters?.isVerified !== undefined) {
-      query.andWhere('garage.isVerified = :isVerified', { isVerified: filters.isVerified });
+      query.andWhere('garage.isVerified = :isVerified', {
+        isVerified: filters.isVerified,
+      });
     }
 
     if (filters?.categoryId) {
-      query.andWhere('category.id = :categoryId', { categoryId: filters.categoryId });
+      query.andWhere('category.id = :categoryId', {
+        categoryId: filters.categoryId,
+      });
     }
 
     if (filters?.serviceId) {
-      query.andWhere('service.id = :serviceId', { serviceId: filters.serviceId });
+      query.andWhere('service.id = :serviceId', {
+        serviceId: filters.serviceId,
+      });
     }
 
     // Get total count
@@ -96,7 +110,12 @@ export class GarageService {
   async findOne(id: number) {
     const garage = await this.garageRepository.findOne({
       where: { id },
-      relations: ['reviews', 'garageServices', 'garageServices.service', 'garageServices.service.category'],
+      relations: [
+        'reviews',
+        'garageServices',
+        'garageServices.service',
+        'garageServices.service.category',
+      ],
     });
 
     if (!garage) {
@@ -109,18 +128,26 @@ export class GarageService {
   async findByOwnerId(ownerId: number) {
     return this.garageRepository.find({
       where: { ownerId },
-      relations: ['garageServices', 'garageServices.service', 'garageServices.service.category', 'reviews'],
+      relations: [
+        'garageServices',
+        'garageServices.service',
+        'garageServices.service.category',
+        'reviews',
+      ],
       order: { createdAt: 'DESC' },
     });
   }
 
-  async getGarageServices(garageId: number, filters?: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    categoryId?: number;
-    isAvailable?: boolean;
-  }) {
+  async getGarageServices(
+    garageId: number,
+    filters?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      categoryId?: number;
+      isAvailable?: boolean;
+    },
+  ) {
     // Verify garage exists
     const garage = await this.garageRepository.findOne({
       where: { id: garageId },
@@ -144,19 +171,21 @@ export class GarageService {
     if (filters?.search) {
       query.andWhere(
         '(LOWER(service.name) LIKE LOWER(:search) OR LOWER(service.description) LIKE LOWER(:search))',
-        { search: `%${filters.search}%` }
+        { search: `%${filters.search}%` },
       );
     }
 
     // Filter by category
     if (filters?.categoryId) {
-      query.andWhere('service.categoryId = :categoryId', { categoryId: filters.categoryId });
+      query.andWhere('service.categoryId = :categoryId', {
+        categoryId: filters.categoryId,
+      });
     }
 
     // Filter by availability
     if (filters?.isAvailable !== undefined) {
-      query.andWhere('garageService.isAvailable = :isAvailable', { 
-        isAvailable: filters.isAvailable 
+      query.andWhere('garageService.isAvailable = :isAvailable', {
+        isAvailable: filters.isAvailable,
       });
     }
 

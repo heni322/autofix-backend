@@ -70,7 +70,10 @@ export class ReviewController {
     @Query('userId', ParseIntPipe) userId: number,
     @Query('garageId', ParseIntPipe) garageId: number,
   ): Promise<{ hasReviewed: boolean }> {
-    const hasReviewed = await this.reviewService.hasUserReviewedGarage(userId, garageId);
+    const hasReviewed = await this.reviewService.hasUserReviewedGarage(
+      userId,
+      garageId,
+    );
     return { hasReviewed };
   }
 

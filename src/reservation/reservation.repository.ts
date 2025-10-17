@@ -16,7 +16,11 @@ export class ReservationRepository extends Repository<Reservation> {
       .where('reservation.userId = :userId', { userId })
       .andWhere('reservation.timeSlot > :now', { now: new Date() })
       .andWhere('reservation.status NOT IN (:...statuses)', {
-        statuses: [ReservationStatus.CANCELLED, ReservationStatus.COMPLETED, ReservationStatus.NO_SHOW]
+        statuses: [
+          ReservationStatus.CANCELLED,
+          ReservationStatus.COMPLETED,
+          ReservationStatus.NO_SHOW,
+        ],
       })
       .orderBy('reservation.timeSlot', 'ASC')
       .getMany();
@@ -25,7 +29,7 @@ export class ReservationRepository extends Repository<Reservation> {
   async findByGarageAndDateRange(
     garageId: number,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<Reservation[]> {
     return this.createQueryBuilder('reservation')
       .leftJoinAndSelect('reservation.user', 'user')
@@ -33,10 +37,10 @@ export class ReservationRepository extends Repository<Reservation> {
       .where('reservation.garageId = :garageId', { garageId })
       .andWhere('reservation.timeSlot BETWEEN :startDate AND :endDate', {
         startDate,
-        endDate
+        endDate,
       })
       .andWhere('reservation.status NOT IN (:...statuses)', {
-        statuses: [ReservationStatus.CANCELLED]
+        statuses: [ReservationStatus.CANCELLED],
       })
       .orderBy('reservation.timeSlot', 'ASC')
       .getMany();
@@ -47,13 +51,17 @@ export class ReservationRepository extends Repository<Reservation> {
     serviceId: number,
     startTime: Date,
     endTime: Date,
-    excludeId?: number
+    excludeId?: number,
   ): Promise<number> {
     const query = this.createQueryBuilder('reservation')
       .where('reservation.garageId = :garageId', { garageId })
       .andWhere('reservation.serviceId = :serviceId', { serviceId })
       .andWhere('reservation.status IN (:...statuses)', {
-        statuses: [ReservationStatus.PENDING, ReservationStatus.CONFIRMED, ReservationStatus.IN_PROGRESS]
+        statuses: [
+          ReservationStatus.PENDING,
+          ReservationStatus.CONFIRMED,
+          ReservationStatus.IN_PROGRESS,
+        ],
       })
       .andWhere('reservation.timeSlot < :endTime', { endTime })
       .andWhere('reservation.endTime > :startTime', { startTime });
@@ -69,10 +77,10 @@ export class ReservationRepository extends Repository<Reservation> {
     return this.find({
       where: {
         garageId,
-        status: ReservationStatus.PENDING_QUOTE
+        status: ReservationStatus.PENDING_QUOTE,
       },
       relations: ['user', 'service'],
-      order: { createdAt: 'ASC' }
+      order: { createdAt: 'ASC' },
     });
   }
 }

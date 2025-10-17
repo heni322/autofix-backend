@@ -3,9 +3,9 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ReservationStatus } from '../../common/enums/reservation-status.enum';
 
 export class UpdateReservationDto {
-  @ApiPropertyOptional({ 
-    description: 'Reservation status', 
-    enum: ReservationStatus 
+  @ApiPropertyOptional({
+    description: 'Reservation status',
+    enum: ReservationStatus,
   })
   @IsOptional()
   @IsEnum(ReservationStatus)

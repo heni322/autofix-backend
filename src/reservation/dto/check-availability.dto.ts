@@ -17,7 +17,10 @@ export class CheckAvailabilityDto {
   @Type(() => Number)
   serviceId!: number;
 
-  @ApiProperty({ description: 'Time slot to check (ISO 8601 format)', example: '2025-10-05T10:00:00Z' })
+  @ApiProperty({
+    description: 'Time slot to check (ISO 8601 format)',
+    example: '2025-10-05T10:00:00Z',
+  })
   @IsNotEmpty({ message: 'Time slot is required' })
   @IsDateString({}, { message: 'Time slot must be a valid date string' })
   timeSlot!: string;

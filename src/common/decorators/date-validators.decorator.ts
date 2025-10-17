@@ -12,16 +12,16 @@ export class IsFutureDateConstraint implements ValidatorConstraintInterface {
     try {
       const date = new Date(dateString);
       const now = new Date();
-      
+
       // Check if date is valid
       if (isNaN(date.getTime())) {
         return false;
       }
-      
+
       // Check if date is in the future (with 5 minute buffer for processing time)
       const bufferMinutes = 5;
       const bufferTime = new Date(now.getTime() + bufferMinutes * 60000);
-      
+
       return date > bufferTime;
     } catch (error) {
       return false;
@@ -51,7 +51,7 @@ export class IsBusinessDayConstraint implements ValidatorConstraintInterface {
     try {
       const date = new Date(dateString);
       const dayOfWeek = date.getDay();
-      
+
       // 0 = Sunday, 6 = Saturday
       // Most businesses are closed on Sunday (0) and possibly Saturday (6)
       return dayOfWeek !== 0; // Allow Monday-Saturday, block Sunday
@@ -84,9 +84,9 @@ export class IsWithinDaysConstraint implements ValidatorConstraintInterface {
       const date = new Date(dateString);
       const now = new Date();
       const maxDays = args.constraints[0] || 90; // Default 90 days
-      
+
       const maxDate = new Date(now.getTime() + maxDays * 24 * 60 * 60 * 1000);
-      
+
       return date <= maxDate;
     } catch (error) {
       return false;
@@ -99,7 +99,10 @@ export class IsWithinDaysConstraint implements ValidatorConstraintInterface {
   }
 }
 
-export function IsWithinDays(days: number, validationOptions?: ValidationOptions) {
+export function IsWithinDays(
+  days: number,
+  validationOptions?: ValidationOptions,
+) {
   return function (object: Object, propertyName: string) {
     registerDecorator({
       target: object.constructor,

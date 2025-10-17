@@ -1,10 +1,16 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { Notification, NotificationType } from '../entities/notification.entity';
+import {
+  Notification,
+  NotificationType,
+} from '../entities/notification.entity';
 import { CreateNotificationDto } from './dto/create-notification-dto';
 import { UpdateNotificationDto } from './dto/update-notification-dto';
-
 
 export interface NotificationStats {
   total: number;
@@ -13,7 +19,6 @@ export interface NotificationStats {
   byType: Record<NotificationType, number>;
 }
 
-
 @Injectable()
 export class NotificationService {
   constructor(
@@ -21,13 +26,21 @@ export class NotificationService {
     private readonly notificationRepository: Repository<Notification>,
   ) {}
 
-  async create(createNotificationDto: CreateNotificationDto): Promise<Notification> {
-    const notification = this.notificationRepository.create(createNotificationDto);
+  async create(
+    createNotificationDto: CreateNotificationDto,
+  ): Promise<Notification> {
+    const notification = this.notificationRepository.create(
+      createNotificationDto,
+    );
     return await this.notificationRepository.save(notification);
   }
 
-  async createBulk(createNotificationDtos: CreateNotificationDto[]): Promise<Notification[]> {
-    const notifications = this.notificationRepository.create(createNotificationDtos);
+  async createBulk(
+    createNotificationDtos: CreateNotificationDto[],
+  ): Promise<Notification[]> {
+    const notifications = this.notificationRepository.create(
+      createNotificationDtos,
+    );
     return await this.notificationRepository.save(notifications);
   }
 
@@ -65,19 +78,28 @@ export class NotificationService {
     });
   }
 
-  async findByUserAndType(userId: number, type: NotificationType): Promise<Notification[]> {
+  async findByUserAndType(
+    userId: number,
+    type: NotificationType,
+  ): Promise<Notification[]> {
     return await this.notificationRepository.find({
       where: { userId, type },
       order: { createdAt: 'DESC' },
     });
   }
 
-  async update(id: string, userId: number, updateNotificationDto: UpdateNotificationDto): Promise<Notification> {
+  async update(
+    id: string,
+    userId: number,
+    updateNotificationDto: UpdateNotificationDto,
+  ): Promise<Notification> {
     const notification = await this.findOne(id);
 
     // Check if user owns this notification
     if (notification.userId !== userId) {
-      throw new ForbiddenException('You can only update your own notifications');
+      throw new ForbiddenException(
+        'You can only update your own notifications',
+      );
     }
 
     Object.assign(notification, updateNotificationDto);
@@ -88,7 +110,9 @@ export class NotificationService {
     const notification = await this.findOne(id);
 
     if (notification.userId !== userId) {
-      throw new ForbiddenException('You can only mark your own notifications as read');
+      throw new ForbiddenException(
+        'You can only mark your own notifications as read',
+      );
     }
 
     notification.isRead = true;
@@ -99,7 +123,9 @@ export class NotificationService {
     const notification = await this.findOne(id);
 
     if (notification.userId !== userId) {
-      throw new ForbiddenException('You can only mark your own notifications as unread');
+      throw new ForbiddenException(
+        'You can only mark your own notifications as unread',
+      );
     }
 
     notification.isRead = false;
@@ -113,15 +139,20 @@ export class NotificationService {
     );
   }
 
-  async markMultipleAsRead(notificationIds: string[], userId: number): Promise<void> {
+  async markMultipleAsRead(
+    notificationIds: string[],
+    userId: number,
+  ): Promise<void> {
     const notifications = await this.notificationRepository.find({
       where: { id: In(notificationIds) },
     });
 
     // Verify all notifications belong to the user
-    const allBelongToUser = notifications.every(n => n.userId === userId);
+    const allBelongToUser = notifications.every((n) => n.userId === userId);
     if (!allBelongToUser) {
-      throw new ForbiddenException('You can only mark your own notifications as read');
+      throw new ForbiddenException(
+        'You can only mark your own notifications as read',
+      );
     }
 
     await this.notificationRepository.update(
@@ -134,7 +165,9 @@ export class NotificationService {
     const notification = await this.findOne(id);
 
     if (notification.userId !== userId) {
-      throw new ForbiddenException('You can only delete your own notifications');
+      throw new ForbiddenException(
+        'You can only delete your own notifications',
+      );
     }
 
     await this.notificationRepository.remove(notification);
@@ -158,16 +191,19 @@ export class NotificationService {
     const notifications = await this.findByUser(userId);
 
     const total = notifications.length;
-    const unread = notifications.filter(n => !n.isRead).length;
+    const unread = notifications.filter((n) => !n.isRead).length;
     const read = total - unread;
 
-    const byType = notifications.reduce((acc, notification) => {
-      acc[notification.type] = (acc[notification.type] || 0) + 1;
-      return acc;
-    }, {} as Record<NotificationType, number>);
+    const byType = notifications.reduce(
+      (acc, notification) => {
+        acc[notification.type] = (acc[notification.type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<NotificationType, number>,
+    );
 
     // Initialize all notification types with 0
-    Object.values(NotificationType).forEach(type => {
+    Object.values(NotificationType).forEach((type) => {
       if (!byType[type]) {
         byType[type] = 0;
       }
@@ -176,7 +212,10 @@ export class NotificationService {
     return { total, unread, read, byType };
   }
 
-  async getRecentNotifications(userId: number, limit: number = 10): Promise<Notification[]> {
+  async getRecentNotifications(
+    userId: number,
+    limit: number = 10,
+  ): Promise<Notification[]> {
     return await this.notificationRepository.find({
       where: { userId },
       order: { createdAt: 'DESC' },
@@ -185,7 +224,11 @@ export class NotificationService {
   }
 
   // Helper method to send different types of notifications
-  async sendReservationConfirmed(userId: number, reservationId: string, metadata?: any): Promise<Notification> {
+  async sendReservationConfirmed(
+    userId: number,
+    reservationId: string,
+    metadata?: any,
+  ): Promise<Notification> {
     return await this.create({
       userId,
       type: NotificationType.RESERVATION_CONFIRMED,
@@ -195,7 +238,11 @@ export class NotificationService {
     });
   }
 
-  async sendReservationCancelled(userId: number, reservationId: string, metadata?: any): Promise<Notification> {
+  async sendReservationCancelled(
+    userId: number,
+    reservationId: string,
+    metadata?: any,
+  ): Promise<Notification> {
     return await this.create({
       userId,
       type: NotificationType.RESERVATION_CANCELLED,
@@ -205,7 +252,11 @@ export class NotificationService {
     });
   }
 
-  async sendQuoteProvided(userId: number, quoteId: string, metadata?: any): Promise<Notification> {
+  async sendQuoteProvided(
+    userId: number,
+    quoteId: string,
+    metadata?: any,
+  ): Promise<Notification> {
     return await this.create({
       userId,
       type: NotificationType.QUOTE_PROVIDED,
@@ -215,7 +266,11 @@ export class NotificationService {
     });
   }
 
-  async sendReminder(userId: number, message: string, metadata?: any): Promise<Notification> {
+  async sendReminder(
+    userId: number,
+    message: string,
+    metadata?: any,
+  ): Promise<Notification> {
     return await this.create({
       userId,
       type: NotificationType.REMINDER,
@@ -225,7 +280,11 @@ export class NotificationService {
     });
   }
 
-  async sendReviewRequest(userId: number, reservationId: string, metadata?: any): Promise<Notification> {
+  async sendReviewRequest(
+    userId: number,
+    reservationId: string,
+    metadata?: any,
+  ): Promise<Notification> {
     return await this.create({
       userId,
       type: NotificationType.REVIEW_REQUEST,

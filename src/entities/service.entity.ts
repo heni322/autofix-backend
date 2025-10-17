@@ -16,25 +16,25 @@ export class Service extends BaseEntity {
   @Column({ type: 'int', default: 60 })
   durationMinutes!: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })  // ADD THIS
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 }) // ADD THIS
   basePrice!: number;
 
-  @Column({ type: 'int', default: 60 })  // ADD THIS (or rename durationMinutes)
+  @Column({ type: 'int', default: 60 }) // ADD THIS (or rename durationMinutes)
   estimatedDuration!: number;
 
-  @Column({ default: true })  // ADD THIS
+  @Column({ default: true }) // ADD THIS
   isActive!: boolean;
 
   @Column()
   @Index()
   categoryId!: number;
 
-  @ManyToOne(() => Category, category => category.services)
+  @ManyToOne(() => Category, (category) => category.services)
   category!: Category;
 
-  @OneToMany(() => GarageService, gs => gs.service)
+  @OneToMany(() => GarageService, (gs) => gs.service)
   garageServices!: GarageService[];
 
-  @OneToMany(() => Reservation, reservation => reservation.service)
+  @OneToMany(() => Reservation, (reservation) => reservation.service)
   reservations!: Reservation[];
 }

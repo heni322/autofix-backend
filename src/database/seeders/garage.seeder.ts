@@ -22,7 +22,10 @@ export async function seedGarages(dataSource: DataSource) {
 
   try {
     // Read Excel file
-    const filePath = path.join(__dirname, '../../../garages_tunisia_contacts.xlsx');
+    const filePath = path.join(
+      __dirname,
+      '../../../garages_tunisia_contacts.xlsx',
+    );
     const workbook = XLSX.readFile(filePath);
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
@@ -38,7 +41,7 @@ export async function seedGarages(dataSource: DataSource) {
     if (!defaultOwner) {
       console.log('👤 Creating default garage owner...');
       const hashedPassword = await bcrypt.hash('DefaultPassword123!', 10);
-      
+
       const ownerData = {
         email: 'garage-owner@system.com',
         firstName: 'System',
@@ -49,7 +52,7 @@ export async function seedGarages(dataSource: DataSource) {
         isActive: true,
         emailVerified: true,
       };
-      
+
       defaultOwner = userRepository.create(ownerData);
       await userRepository.save(defaultOwner);
       console.log('✅ Default owner created');
@@ -63,7 +66,9 @@ export async function seedGarages(dataSource: DataSource) {
       try {
         // Skip if essential data is missing
         if (!row.nom || !row.adresse || !row.ville) {
-          console.log(`⚠️  Skipping row - missing essential data: ${row.nom || 'N/A'}`);
+          console.log(
+            `⚠️  Skipping row - missing essential data: ${row.nom || 'N/A'}`,
+          );
           skippedCount++;
           continue;
         }
@@ -80,8 +85,9 @@ export async function seedGarages(dataSource: DataSource) {
         }
 
         // Extract phone number (use telephone or telephone_international)
-        const phoneNumber = row.telephone_international || 
-                           (row.telephone ? `+216 ${row.telephone}` : '+216 00 000 000');
+        const phoneNumber =
+          row.telephone_international ||
+          (row.telephone ? `+216 ${row.telephone}` : '+216 00 000 000');
 
         // Clean phone for validation
         const cleanPhone = phoneNumber.replace(/\s+/g, ' ').trim();
@@ -114,13 +120,13 @@ export async function seedGarages(dataSource: DataSource) {
         });
 
         await garageRepository.save(garage);
-        
+
         createdCount++;
         console.log(`✅ Created garage: ${row.nom} in ${row.ville}`);
-
       } catch (error: unknown) {
         errorCount++;
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
         console.error(`❌ Error creating garage ${row.nom}:`, errorMessage);
       }
     }
@@ -131,9 +137,9 @@ export async function seedGarages(dataSource: DataSource) {
     console.log(`   ❌ Errors: ${errorCount} garages`);
     console.log(`   📝 Total rows processed: ${data.length}`);
     console.log('\n🎉 Garage seeding completed!');
-
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     console.error('❌ Error during seeding:', errorMessage);
     throw error;
   }

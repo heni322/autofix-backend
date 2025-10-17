@@ -25,9 +25,9 @@ export class Review extends BaseEntity {
   @Column({ default: false })
   isVerified!: boolean;
 
-  @ManyToOne(() => User, user => user.reviews)
+  @ManyToOne(() => User, (user) => user.reviews)
   user!: User;
 
-  @ManyToOne(() => Garage, garage => garage.reviews)
+  @ManyToOne(() => Garage, (garage) => garage.reviews)
   garage!: Garage;
 }

@@ -26,7 +26,8 @@ export class HealthController {
       () => this.db.pingCheck('database'),
       () => this.memory.checkHeap('memory_heap', 150 * 1024 * 1024), // 150MB
       () => this.memory.checkRSS('memory_rss', 300 * 1024 * 1024), // 300MB
-      () => this.disk.checkStorage('disk', { path: '/', thresholdPercent: 0.9 }),
+      () =>
+        this.disk.checkStorage('disk', { path: '/', thresholdPercent: 0.9 }),
     ]);
   }
 
@@ -41,10 +42,10 @@ export class HealthController {
 
   @Get('ready')
   @HealthCheck()
-  @ApiOperation({ summary: 'Readiness probe - checks if app is ready to serve traffic' })
+  @ApiOperation({
+    summary: 'Readiness probe - checks if app is ready to serve traffic',
+  })
   ready() {
-    return this.health.check([
-      () => this.db.pingCheck('database'),
-    ]);
+    return this.health.check([() => this.db.pingCheck('database')]);
   }
 }

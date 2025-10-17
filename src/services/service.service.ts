@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Service } from '../entities/service.entity';
@@ -24,11 +28,16 @@ export class ServiceService {
     });
 
     if (!category) {
-      throw new NotFoundException(`Category with ID ${createServiceDto.categoryId} not found`);
+      throw new NotFoundException(
+        `Category with ID ${createServiceDto.categoryId} not found`,
+      );
     }
 
     // Validate duration
-    if (createServiceDto.durationMinutes && createServiceDto.durationMinutes <= 0) {
+    if (
+      createServiceDto.durationMinutes &&
+      createServiceDto.durationMinutes <= 0
+    ) {
       throw new BadRequestException('Duration must be greater than 0');
     }
 
@@ -73,7 +82,10 @@ export class ServiceService {
       .getMany();
   }
 
-  async findByDuration(minDuration: number, maxDuration: number): Promise<Service[]> {
+  async findByDuration(
+    minDuration: number,
+    maxDuration: number,
+  ): Promise<Service[]> {
     return await this.serviceRepository
       .createQueryBuilder('service')
       .where('service.durationMinutes >= :minDuration', { minDuration })
@@ -83,7 +95,10 @@ export class ServiceService {
       .getMany();
   }
 
-  async update(id: string, updateServiceDto: UpdateServiceDto): Promise<Service> {
+  async update(
+    id: string,
+    updateServiceDto: UpdateServiceDto,
+  ): Promise<Service> {
     const service = await this.findOne(id);
 
     // Validate category if provided
@@ -93,12 +108,17 @@ export class ServiceService {
       });
 
       if (!category) {
-        throw new NotFoundException(`Category with ID ${updateServiceDto.categoryId} not found`);
+        throw new NotFoundException(
+          `Category with ID ${updateServiceDto.categoryId} not found`,
+        );
       }
     }
 
     // Validate duration if provided
-    if (updateServiceDto.durationMinutes && updateServiceDto.durationMinutes <= 0) {
+    if (
+      updateServiceDto.durationMinutes &&
+      updateServiceDto.durationMinutes <= 0
+    ) {
       throw new BadRequestException('Duration must be greater than 0');
     }
 
@@ -108,10 +128,12 @@ export class ServiceService {
 
   async remove(id: string): Promise<void> {
     const service = await this.findOne(id);
-    
+
     // Check if service has active reservations
     if (service.reservations && service.reservations.length > 0) {
-      throw new BadRequestException('Cannot delete service with existing reservations');
+      throw new BadRequestException(
+        'Cannot delete service with existing reservations',
+      );
     }
 
     await this.serviceRepository.remove(service);
@@ -139,7 +161,10 @@ export class ServiceService {
       .createQueryBuilder('service')
       .leftJoinAndSelect('service.category', 'category')
       .leftJoinAndSelect('service.reservations', 'reservations')
-      .loadRelationCountAndMap('service.reservationCount', 'service.reservations')
+      .loadRelationCountAndMap(
+        'service.reservationCount',
+        'service.reservations',
+      )
       .orderBy('service.reservationCount', 'DESC')
       .take(limit)
       .getMany();
@@ -155,7 +180,9 @@ export class ServiceService {
       .getMany();
   }
 
-  async countServicesByCategory(): Promise<{ categoryId: number; categoryName: string; count: number }[]> {
+  async countServicesByCategory(): Promise<
+    { categoryId: number; categoryName: string; count: number }[]
+  > {
     const result = await this.serviceRepository
       .createQueryBuilder('service')
       .select('service.categoryId', 'categoryId')
@@ -167,7 +194,7 @@ export class ServiceService {
       .orderBy('count', 'DESC')
       .getRawMany();
 
-    return result.map(r => ({
+    return result.map((r) => ({
       categoryId: parseInt(r.categoryId),
       categoryName: r.categoryName,
       count: parseInt(r.count),

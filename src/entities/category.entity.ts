@@ -17,9 +17,9 @@ export class Category extends BaseEntity {
   @Column({ default: 0 })
   sortOrder!: number;
 
-  @Column({ default: true })  // ADD THIS
+  @Column({ default: true }) // ADD THIS
   isActive!: boolean;
 
-  @OneToMany(() => Service, service => service.category)
+  @OneToMany(() => Service, (service) => service.category)
   services!: Service[];
 }

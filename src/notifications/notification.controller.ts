@@ -14,12 +14,14 @@ import {
   ParseIntPipe,
   ParseEnumPipe,
 } from '@nestjs/common';
-import { Notification, NotificationType } from '../entities/notification.entity';
+import {
+  Notification,
+  NotificationType,
+} from '../entities/notification.entity';
 import { NotificationService, NotificationStats } from './notification.service';
 import { CreateNotificationDto } from './dto/create-notification-dto';
 import { UpdateNotificationDto } from './dto/update-notification-dto';
 import { BulkMarkAsReadDto } from './dto/bulk-mark-as-read-dto';
-
 
 @Controller('notifications')
 export class NotificationController {
@@ -102,7 +104,11 @@ export class NotificationController {
     @Body(ValidationPipe) updateNotificationDto: UpdateNotificationDto,
     @Body('userId', ParseIntPipe) userId: number,
   ): Promise<Notification> {
-    return await this.notificationService.update(id, userId, updateNotificationDto);
+    return await this.notificationService.update(
+      id,
+      userId,
+      updateNotificationDto,
+    );
   }
 
   @Patch(':id/read')
@@ -216,7 +222,11 @@ export class NotificationController {
     @Body('message') message: string,
     @Body('metadata') metadata?: any,
   ): Promise<Notification> {
-    return await this.notificationService.sendReminder(userId, message, metadata);
+    return await this.notificationService.sendReminder(
+      userId,
+      message,
+      metadata,
+    );
   }
 
   @Post('send/review-request')

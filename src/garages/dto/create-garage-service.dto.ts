@@ -1,4 +1,12 @@
-import { IsNotEmpty, IsNumber, IsBoolean, IsOptional, Min, IsEnum, IsString } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsBoolean,
+  IsOptional,
+  Min,
+  IsEnum,
+  IsString,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PricingType } from '../../common/enums/pricing-type.enum';
@@ -16,7 +24,10 @@ export class CreateGarageServiceDto {
   @Type(() => Number)
   serviceId!: number;
 
-  @ApiProperty({ description: 'Service capacity (concurrent bookings)', minimum: 1 })
+  @ApiProperty({
+    description: 'Service capacity (concurrent bookings)',
+    minimum: 1,
+  })
   @IsNotEmpty()
   @IsNumber()
   @Min(1)
@@ -35,7 +46,10 @@ export class CreateGarageServiceDto {
   @IsEnum(PricingType)
   pricingType!: PricingType;
 
-  @ApiPropertyOptional({ description: 'Service availability status', default: true })
+  @ApiPropertyOptional({
+    description: 'Service availability status',
+    default: true,
+  })
   @IsOptional()
   @IsBoolean()
   isAvailable?: boolean;

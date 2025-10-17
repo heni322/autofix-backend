@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards, Query, ParseIntPipe, Request, DefaultValuePipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Param,
+  UseGuards,
+  Query,
+  ParseIntPipe,
+  Request,
+  DefaultValuePipe,
+} from '@nestjs/common';
 import { GarageService } from './garage.service';
 import { CreateGarageDto } from './dto/create-garage.dto';
 import { UpdateGarageDto } from './dto/update-garage.dto';
@@ -30,7 +42,7 @@ export class GarageController {
   @ApiOperation({ summary: 'Create a new garage' })
   create(
     @Body() createGarageDto: CreateGarageDto,
-    @Request() req: ExpressRequest & { user: Express.User }
+    @Request() req: ExpressRequest & { user: Express.User },
   ) {
     return this.garageService.create(createGarageDto, req.user.id);
   }
@@ -52,16 +64,24 @@ export class GarageController {
     @Query('city') city?: string,
     @Query('isActive') isActive?: string,
     @Query('isVerified') isVerified?: string,
-    @Query('categoryId', new ParseIntPipe({ optional: true })) categoryId?: number,
-    @Query('serviceId', new ParseIntPipe({ optional: true })) serviceId?: number,
+    @Query('categoryId', new ParseIntPipe({ optional: true }))
+    categoryId?: number,
+    @Query('serviceId', new ParseIntPipe({ optional: true }))
+    serviceId?: number,
   ) {
     return this.garageService.findAll({
       page,
       limit,
       search,
       city,
-      isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
-      isVerified: isVerified === 'true' ? true : isVerified === 'false' ? false : undefined,
+      isActive:
+        isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      isVerified:
+        isVerified === 'true'
+          ? true
+          : isVerified === 'false'
+            ? false
+            : undefined,
       categoryId,
       serviceId,
     });
@@ -94,7 +114,8 @@ export class GarageController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
     @Query('search') search?: string,
-    @Query('categoryId', new ParseIntPipe({ optional: true })) categoryId?: number,
+    @Query('categoryId', new ParseIntPipe({ optional: true }))
+    categoryId?: number,
     @Query('isAvailable') isAvailable?: string,
   ) {
     return this.garageService.getGarageServices(id, {
@@ -102,7 +123,12 @@ export class GarageController {
       limit,
       search,
       categoryId,
-      isAvailable: isAvailable === 'true' ? true : isAvailable === 'false' ? false : undefined,
+      isAvailable:
+        isAvailable === 'true'
+          ? true
+          : isAvailable === 'false'
+            ? false
+            : undefined,
     });
   }
 
@@ -114,7 +140,7 @@ export class GarageController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateGarageDto: UpdateGarageDto,
-    @Request() req: ExpressRequest & { user: Express.User }
+    @Request() req: ExpressRequest & { user: Express.User },
   ) {
     return this.garageService.update(id, updateGarageDto, req.user.id);
   }

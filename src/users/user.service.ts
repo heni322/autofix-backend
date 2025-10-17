@@ -17,16 +17,18 @@ export class UserService {
 
   async findOne(id: number): Promise<User> {
     const user = await this.userRepository.findOne({ where: { id } });
-    
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    
+
     return user;
   }
 
   async findByEmail(email: string): Promise<User | undefined> {
-    return (await this.userRepository.findOne({ where: { email } })) ?? undefined;
+    return (
+      (await this.userRepository.findOne({ where: { email } })) ?? undefined
+    );
   }
 
   async findAll(): Promise<User[]> {

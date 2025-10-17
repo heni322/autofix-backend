@@ -30,9 +30,11 @@ export class GarageService extends BaseEntity {
   @Column('text', { nullable: true })
   notes!: string;
 
-  @ManyToOne(() => Garage, garage => garage.garageServices, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Garage, (garage) => garage.garageServices, {
+    onDelete: 'CASCADE',
+  })
   garage!: Garage;
 
-  @ManyToOne(() => Service, service => service.garageServices)
+  @ManyToOne(() => Service, (service) => service.garageServices)
   service!: Service;
 }

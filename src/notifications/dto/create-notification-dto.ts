@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsString, IsEnum, IsNumber, IsOptional, IsObject } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsObject,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { NotificationType } from '../../entities/notification.entity';
 

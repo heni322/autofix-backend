@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GarageService } from '../entities/garage-service.entity';
@@ -61,7 +65,10 @@ export class GarageServiceService {
     return garageService;
   }
 
-  async findByGarageAndService(garageId: number, serviceId: number): Promise<GarageService> {
+  async findByGarageAndService(
+    garageId: number,
+    serviceId: number,
+  ): Promise<GarageService> {
     const garageService = await this.garageServiceRepository.findOne({
       where: { garageId, serviceId },
       relations: ['service', 'garage'],
@@ -74,13 +81,17 @@ export class GarageServiceService {
     return garageService;
   }
 
-  async update(id: number, updateData: Partial<CreateGarageServiceDto>): Promise<GarageService> {
+  async update(
+    id: number,
+    updateData: Partial<CreateGarageServiceDto>,
+  ): Promise<GarageService> {
     const garageService = await this.findOne(id);
 
     // Validate pricing if being updated
     if (updateData.pricingType || updateData.price !== undefined) {
       const pricingType = updateData.pricingType || garageService.pricingType;
-      const price = updateData.price !== undefined ? updateData.price : garageService.price;
+      const price =
+        updateData.price !== undefined ? updateData.price : garageService.price;
       this.validatePricing(pricingType, price);
     }
 
@@ -96,7 +107,7 @@ export class GarageServiceService {
 
   async remove(id: number): Promise<void> {
     const result = await this.garageServiceRepository.delete(id);
-    
+
     if (result.affected === 0) {
       throw new NotFoundException('Garage service not found');
     }
@@ -107,8 +118,14 @@ export class GarageServiceService {
       throw new BadRequestException('Price is required for FIXED pricing type');
     }
 
-    if ((pricingType === PricingType.QUOTE || pricingType === PricingType.CONSULTATION) && price) {
-      throw new BadRequestException('Price should not be set for QUOTE or CONSULTATION pricing types');
+    if (
+      (pricingType === PricingType.QUOTE ||
+        pricingType === PricingType.CONSULTATION) &&
+      price
+    ) {
+      throw new BadRequestException(
+        'Price should not be set for QUOTE or CONSULTATION pricing types',
+      );
     }
   }
 }

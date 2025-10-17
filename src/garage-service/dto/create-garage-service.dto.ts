@@ -1,11 +1,19 @@
-import { IsNotEmpty, IsNumber, IsBoolean, IsOptional, Min, IsEnum, IsString } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsBoolean,
+  IsOptional,
+  Min,
+  IsEnum,
+  IsString,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum PricingType {
   FIXED = 'FIXED',
   QUOTE = 'QUOTE',
-  CONSULTATION = 'CONSULTATION'
+  CONSULTATION = 'CONSULTATION',
 }
 
 export class CreateGarageServiceDto {

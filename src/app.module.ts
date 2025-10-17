@@ -26,7 +26,7 @@ import { NotificationsModule } from './notifications/notification.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    
+
     // Database
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -37,16 +37,24 @@ import { NotificationsModule } from './notifications/notification.module';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
-        entities: [User, Category, Service, Garage, GarageService, Review, Reservation],
+        entities: [
+          User,
+          Category,
+          Service,
+          Garage,
+          GarageService,
+          Review,
+          Reservation,
+        ],
         synchronize: configService.get('NODE_ENV') !== 'production',
         logging: configService.get('NODE_ENV') === 'development',
       }),
       inject: [ConfigService],
     }),
-    
+
     // Event Emitter
     EventEmitterModule.forRoot(),
-    
+
     // Feature Modules
     AuthModule,
     UsersModule,

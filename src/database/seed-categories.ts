@@ -31,9 +31,9 @@ async function runCategorySeeder() {
     console.log('\n✅ Category seeder completed successfully!');
     await AppDataSource.destroy();
     process.exit(0);
-
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     console.error('❌ Seeding failed:', errorMessage);
     if (error instanceof Error && error.stack) {
       console.error('Stack trace:', error.stack);

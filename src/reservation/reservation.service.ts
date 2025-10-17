@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { PricingType } from '../common/enums/pricing-type.enum';        
+import { PricingType } from '../common/enums/pricing-type.enum';
 import { Repository } from 'typeorm';
 
 import { Reservation } from '../entities/reservation.entity';
@@ -36,7 +40,7 @@ export class ReservationService {
       where: {
         garageId: dto.garageId,
         serviceId: dto.serviceId,
-        isAvailable: true
+        isAvailable: true,
       },
       relations: ['service'],
     });
@@ -47,15 +51,18 @@ export class ReservationService {
 
     // Calculate end time
     const endTime = new Date(timeSlot);
-    endTime.setMinutes(endTime.getMinutes() + garageService.service.durationMinutes);
+    endTime.setMinutes(
+      endTime.getMinutes() + garageService.service.durationMinutes,
+    );
 
     // Count conflicting reservations
-    const bookedCount = await this.reservationRepository.countConflictingReservations(
-      dto.garageId,
-      dto.serviceId,
-      timeSlot,
-      endTime
-    );
+    const bookedCount =
+      await this.reservationRepository.countConflictingReservations(
+        dto.garageId,
+        dto.serviceId,
+        timeSlot,
+        endTime,
+      );
 
     const remainingSlots = garageService.capacity - bookedCount;
 
@@ -85,7 +92,7 @@ export class ReservationService {
     const garageService = await this.garageServiceRepository.findOne({
       where: {
         garageId: createDto.garageId,
-        serviceId: createDto.serviceId
+        serviceId: createDto.serviceId,
       },
       relations: ['service'],
     });
@@ -96,7 +103,9 @@ export class ReservationService {
 
     const timeSlot = new Date(createDto.timeSlot);
     const endTime = new Date(timeSlot);
-    endTime.setMinutes(endTime.getMinutes() + garageService.service.durationMinutes);
+    endTime.setMinutes(
+      endTime.getMinutes() + garageService.service.durationMinutes,
+    );
 
     // Determine status and price based on pricing type
     let status = ReservationStatus.PENDING;
@@ -130,7 +139,9 @@ export class ReservationService {
     const savedReservation = await this.reservationRepository.save(reservation);
 
     // Emit event for notifications
-    this.eventEmitter.emit('reservation.created', { reservation: savedReservation });
+    this.eventEmitter.emit('reservation.created', {
+      reservation: savedReservation,
+    });
 
     return savedReservation;
   }
@@ -140,21 +151,28 @@ export class ReservationService {
     garageId?: number;
     status?: ReservationStatus;
   }): Promise<Reservation[]> {
-    const query = this.reservationRepository.createQueryBuilder('reservation')
+    const query = this.reservationRepository
+      .createQueryBuilder('reservation')
       .leftJoinAndSelect('reservation.user', 'user')
       .leftJoinAndSelect('reservation.garage', 'garage')
       .leftJoinAndSelect('reservation.service', 'service');
 
     if (filters?.userId) {
-      query.andWhere('reservation.userId = :userId', { userId: filters.userId });
+      query.andWhere('reservation.userId = :userId', {
+        userId: filters.userId,
+      });
     }
 
     if (filters?.garageId) {
-      query.andWhere('reservation.garageId = :garageId', { garageId: filters.garageId });
+      query.andWhere('reservation.garageId = :garageId', {
+        garageId: filters.garageId,
+      });
     }
 
     if (filters?.status) {
-      query.andWhere('reservation.status = :status', { status: filters.status });
+      query.andWhere('reservation.status = :status', {
+        status: filters.status,
+      });
     }
 
     return query.orderBy('reservation.timeSlot', 'DESC').getMany();
@@ -177,7 +195,9 @@ export class ReservationService {
     const reservation = await this.findOne(id);
 
     if (reservation.status !== ReservationStatus.PENDING_QUOTE) {
-      throw new BadRequestException('Can only provide quote for PENDING_QUOTE reservations');
+      throw new BadRequestException(
+        'Can only provide quote for PENDING_QUOTE reservations',
+      );
     }
 
     reservation.price = dto.price;
@@ -200,7 +220,9 @@ export class ReservationService {
     }
 
     if (reservation.status !== ReservationStatus.QUOTE_PROVIDED) {
-      throw new BadRequestException('Can only accept QUOTE_PROVIDED reservations');
+      throw new BadRequestException(
+        'Can only accept QUOTE_PROVIDED reservations',
+      );
     }
 
     reservation.status = ReservationStatus.CONFIRMED;
@@ -245,7 +267,11 @@ export class ReservationService {
   async complete(id: number): Promise<Reservation> {
     const reservation = await this.findOne(id);
 
-    if (![ReservationStatus.CONFIRMED, ReservationStatus.IN_PROGRESS].includes(reservation.status)) {
+    if (
+      ![ReservationStatus.CONFIRMED, ReservationStatus.IN_PROGRESS].includes(
+        reservation.status,
+      )
+    ) {
       throw new BadRequestException('Cannot complete this reservation');
     }
 
@@ -262,7 +288,11 @@ export class ReservationService {
   async cancel(id: number, reason?: string): Promise<Reservation> {
     const reservation = await this.findOne(id);
 
-    if ([ReservationStatus.COMPLETED, ReservationStatus.CANCELLED].includes(reservation.status)) {
+    if (
+      [ReservationStatus.COMPLETED, ReservationStatus.CANCELLED].includes(
+        reservation.status,
+      )
+    ) {
       throw new BadRequestException('Cannot cancel this reservation');
     }
 
@@ -281,11 +311,17 @@ export class ReservationService {
     garageId: number,
     serviceId: number,
     date: string,
-  ): Promise<Array<{ timeSlot: string; available: boolean; remainingSlots: number }>> {
+  ): Promise<
+    Array<{ timeSlot: string; available: boolean; remainingSlots: number }>
+  > {
     const targetDate = new Date(date);
     targetDate.setHours(0, 0, 0, 0);
-    
-    const slots: Array<{ timeSlot: string; available: boolean; remainingSlots: number }> = [];
+
+    const slots: Array<{
+      timeSlot: string;
+      available: boolean;
+      remainingSlots: number;
+    }> = [];
     const startHour = 8;
     const endHour = 18;
     const intervalMinutes = 30;
