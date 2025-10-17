@@ -1,0 +1,174 @@
+name: Backend CI/CD - AutoFix
+
+on:
+  push:
+    branches:
+      - main
+      - production
+  pull_request:
+    branches:
+      - main
+      - production
+  workflow_dispatch:
+
+env:
+  DOCKER_IMAGE_NAME: autofix-backend
+  CONTAINER_NAME: autofix_backend_prod
+  DEPLOY_PATH: /var/www/autofix-backend
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint --if-present
+
+      - name: Run tests
+        run: npm test --if-present
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+          DB_DATABASE: test_db
+          JWT_SECRET: test_jwt_secret_for_testing_only
+          JWT_REFRESH_SECRET: test_refresh_secret_for_testing_only
+
+      - name: Build application
+        run: npm run build
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/production' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ env.DOCKER_IMAGE_NAME }}:latest \
+            -t ${{ env.DOCKER_IMAGE_NAME }}:${{ github.sha }} \
+            .
+
+      - name: Save Docker image
+        run: docker save ${{ env.DOCKER_IMAGE_NAME }}:latest | gzip > autofix-backend.tar.gz
+
+      - name: Create .env.production file
+        run: |
+          cat > .env.production << EOF
+          # Database Configuration
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT }}
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_DATABASE=${{ secrets.DB_DATABASE }}
+          
+          # JWT Configuration
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
+          
+          # Frontend URL
+          FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+          
+          # Application
+          PORT=4000
+          NODE_ENV=production
+          
+          # Email Configuration (Optional)
+          SMTP_HOST=${{ secrets.SMTP_HOST }}
+          SMTP_PORT=${{ secrets.SMTP_PORT }}
+          SMTP_USER=${{ secrets.SMTP_USER }}
+          SMTP_PASS=${{ secrets.SMTP_PASS }}
+          EOF
+
+      - name: Copy files to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          source: "autofix-backend.tar.gz,docker-compose.prod.yml,.env.production"
+          target: ${{ env.DEPLOY_PATH }}
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            cd ${{ env.DEPLOY_PATH }}
+            
+            # Load Docker image
+            docker load < autofix-backend.tar.gz
+            
+            # Stop and remove old container
+            docker stop ${{ env.CONTAINER_NAME }} || true
+            docker rm ${{ env.CONTAINER_NAME }} || true
+            
+            # Start new container
+            docker-compose -f docker-compose.prod.yml up -d
+            
+            # Clean up
+            rm autofix-backend.tar.gz
+            
+            # Remove dangling images
+            docker image prune -f
+            
+            # Wait for container to start
+            sleep 10
+            
+            # Check container status
+            docker ps | grep ${{ env.CONTAINER_NAME }}
+            
+            # Show logs
+            docker logs --tail 50 ${{ env.CONTAINER_NAME }}
+            
+            echo "Deployment completed successfully!"
+
+      - name: Health check
+        run: |
+          echo "Waiting for application to start..."
+          sleep 15
+          
+          for i in {1..5}; do
+            if curl -f https://backend.prochainconsulting.com/api/v1/health; then
+              echo "Backend API is healthy!"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying..."
+            sleep 10
+          done
+          
+          echo "Health check failed!"
+          exit 1
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✅ Backend deployment successful!"
+          else
+            echo "❌ Backend deployment failed!"
+          fi
