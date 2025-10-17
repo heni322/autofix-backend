@@ -1,12 +1,19 @@
 # Stage 1: Build
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
+
+# Install necessary build tools for native dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies with legacy peer deps flag to avoid conflicts
+# Install dependencies
 RUN npm ci --legacy-peer-deps
 
 # Copy source code
@@ -16,7 +23,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Production
-FROM node:20-alpine AS production
+FROM node:20-slim AS production
 
 WORKDIR /app
 
@@ -30,8 +37,7 @@ RUN npm ci --omit=dev --legacy-peer-deps
 COPY --from=builder /app/dist ./dist
 
 # Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nestjs -u 1001
+RUN groupadd -r nodejs && useradd -r -g nodejs nestjs
 
 # Change ownership
 RUN chown -R nestjs:nodejs /app
