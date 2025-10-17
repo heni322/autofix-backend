@@ -28,10 +28,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+
+      - name: Remove old package-lock
+        run: rm -f package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Format code with Prettier
         run: npm run format
@@ -145,7 +147,7 @@ jobs:
             
             # Clean up
             echo "Cleaning up..."
-            rm autofix-frontend.tar.gz
+            rm autofix-backend.tar.gz
             
             # Remove dangling images
             docker image prune -f
