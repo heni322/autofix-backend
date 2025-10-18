@@ -31,7 +31,7 @@ FROM node:20-alpine AS production
 WORKDIR /app
 
 # Install netcat for database health check
-RUN apk add --no-cache netcat-openbsd
+RUN apk add --no-cache netcat-openbsd curl
 
 # Copy package files
 COPY package.json package-lock.json* ./
@@ -58,7 +58,7 @@ EXPOSE 4000
 ENV NODE_ENV=production
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:4000/api/v1/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD curl -f http://localhost:4000/api/health || exit 1
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["node", "dist/main.js"]
