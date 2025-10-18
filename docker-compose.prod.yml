@@ -1,8 +1,8 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
+  # PostgreSQL Database for AutoFix (port 5433)
+  autofix-postgres:
     image: postgres:15-alpine
     container_name: autofix_postgres_prod
     restart: unless-stopped
@@ -12,7 +12,9 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - autofix_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
     networks:
       - autofix-network
     healthcheck:
@@ -32,14 +34,14 @@ services:
     container_name: autofix_backend_prod
     restart: unless-stopped
     depends_on:
-      postgres:
+      autofix-postgres:
         condition: service_healthy
     ports:
       - "4000:4000"
     environment:
       - NODE_ENV=production
       - PORT=4000
-      - DB_HOST=postgres
+      - DB_HOST=autofix-postgres
       - DB_PORT=5432
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
@@ -69,7 +71,7 @@ services:
       - "version=1.0"
 
 volumes:
-  postgres_data:
+  autofix_postgres_data:
     driver: local
 
 networks:
