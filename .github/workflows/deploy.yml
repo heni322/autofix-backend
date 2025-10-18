@@ -29,11 +29,8 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Remove old package-lock
-        run: rm -f package-lock.json
-
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps
 
       - name: Format code with Prettier
         run: npm run format
@@ -84,34 +81,6 @@ jobs:
       - name: Save Docker image
         run: docker save ${{ env.DOCKER_IMAGE_NAME }}:latest | gzip > autofix-backend.tar.gz
 
-      - name: Create .env.production file
-        run: |
-          cat > .env.production << EOF
-          # Database Configuration
-          DB_HOST=${{ secrets.DB_HOST }}
-          DB_PORT=${{ secrets.DB_PORT }}
-          DB_USERNAME=${{ secrets.DB_USERNAME }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_DATABASE=${{ secrets.DB_DATABASE }}
-          
-          # JWT Configuration
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
-          
-          # Frontend URL
-          FRONTEND_URL=${{ secrets.FRONTEND_URL }}
-          
-          # Application
-          PORT=4000
-          NODE_ENV=production
-          
-          # Email Configuration (Optional)
-          SMTP_HOST=${{ secrets.SMTP_HOST }}
-          SMTP_PORT=${{ secrets.SMTP_PORT }}
-          SMTP_USER=${{ secrets.SMTP_USER }}
-          SMTP_PASS=${{ secrets.SMTP_PASS }}
-          EOF
-
       - name: Prepare deploy directory on VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -120,16 +89,10 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            # Create directory if it doesn't exist
             sudo mkdir -p ${{ env.DEPLOY_PATH }}
-            
-            # Set correct ownership
             sudo chown -R ${{ secrets.VPS_USERNAME }}:${{ secrets.VPS_USERNAME }} ${{ env.DEPLOY_PATH }}
-            
-            # Set correct permissions
             sudo chmod -R 755 ${{ env.DEPLOY_PATH }}
-            
-            echo "✅ Deploy directory prepared"
+            echo "Deploy directory prepared"
 
       - name: Copy files to VPS
         uses: appleboy/scp-action@v0.1.7
@@ -138,7 +101,7 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          source: "autofix-backend.tar.gz,docker-compose.prod.yml,.env.production"
+          source: "autofix-backend.tar.gz,docker-compose.prod.yml"
           target: ${{ env.DEPLOY_PATH }}
           overwrite: true
           rm: false
@@ -153,68 +116,91 @@ jobs:
           script: |
             cd ${{ env.DEPLOY_PATH }}
             
-            # Load Docker image
+            # Create .env.production with secrets (done on VPS for security)
+            cat > .env.production << 'ENVEOF'
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_PORT=${{ secrets.DB_PORT }}
+            DB_USERNAME=${{ secrets.DB_USERNAME }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_DATABASE=${{ secrets.DB_DATABASE }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
+            FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+            PORT=4000
+            NODE_ENV=production
+            SMTP_HOST=${{ secrets.SMTP_HOST }}
+            SMTP_PORT=${{ secrets.SMTP_PORT }}
+            SMTP_USER=${{ secrets.SMTP_USER }}
+            SMTP_PASS=${{ secrets.SMTP_PASS }}
+            ENVEOF
+            
+            # Verify env file was created
+            if [ ! -f .env.production ]; then
+              echo "ERROR: .env.production file was not created!"
+              exit 1
+            fi
+            
             echo "Loading Docker image..."
             docker load < autofix-backend.tar.gz
             
-            # Stop and remove old container
             echo "Stopping old container..."
-            docker stop ${{ env.CONTAINER_NAME }} 2>/dev/null || true
-            docker rm ${{ env.CONTAINER_NAME }} 2>/dev/null || true
+            docker-compose -f docker-compose.prod.yml down 2>/dev/null || true
             
-            # Start new container
             echo "Starting new container..."
             docker-compose -f docker-compose.prod.yml up -d
             
-            # Clean up
-            echo "Cleaning up..."
-            rm autofix-backend.tar.gz
-            
-            # Remove dangling images
-            docker image prune -f
-            
-            # Wait for container to start
+            # Wait for container to initialize
             echo "Waiting for container to initialize..."
-            sleep 15
+            sleep 20
             
             # Check container status
             echo "Container status:"
-            docker ps | grep ${{ env.CONTAINER_NAME }} || echo "Warning: Container not found in docker ps"
+            docker ps | grep ${{ env.CONTAINER_NAME }}
             
             # Show logs
             echo ""
             echo "Recent logs:"
-            docker logs --tail 50 ${{ env.CONTAINER_NAME }} || echo "Could not fetch logs"
+            docker logs --tail 100 ${{ env.CONTAINER_NAME }}
             
+            # Verify environment variables are loaded
             echo ""
-            echo "✅ Deployment completed!"
+            echo "Verifying environment variables in container:"
+            docker exec ${{ env.CONTAINER_NAME }} env | grep -E "DB_HOST|DB_PORT|JWT_SECRET" || echo "WARNING: Could not verify env vars"
+            
+            # Clean up
+            echo ""
+            echo "Cleaning up old images..."
+            docker image prune -f
+            rm -f autofix-backend.tar.gz
+            
+            echo "Deployment completed"
 
       - name: Health check
         run: |
-          echo "Waiting for application to start..."
-          sleep 20
+          echo "Waiting for application to be ready..."
+          sleep 10
           
-          for i in {1..5}; do
-            echo "Health check attempt $i..."
-            if curl -f -s https://backend.prochainconsulting.com/api/v1/health; then
-              echo "✅ Backend API is healthy!"
+          for i in {1..10}; do
+            echo "Health check attempt $i/10..."
+            if curl -f -s -I https://backend.prochainconsulting.com/api/v1/health > /dev/null 2>&1; then
+              echo "Backend API is healthy"
               exit 0
             fi
             echo "Attempt $i failed, retrying in 10 seconds..."
             sleep 10
           done
           
-          echo "⚠️ Health check failed! Check logs manually."
-          echo "This might be expected if Nginx is not yet configured."
+          echo "WARNING: Health check failed after 10 attempts"
+          echo "This may be expected if Nginx is not configured or DNS is not updated"
           exit 0
 
       - name: Notify deployment status
         if: always()
         run: |
-          if [ ${{ job.status }} == 'success' ]; then
-            echo "✅ Backend deployment completed!"
-            echo "🌐 API URL: https://backend.prochainconsulting.com/api/v1"
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "Backend deployment completed successfully"
+            echo "API URL: https://backend.prochainconsulting.com/api/v1"
           else
-            echo "❌ Backend deployment had issues!"
-            echo "Check the logs above for details."
+            echo "Backend deployment had issues"
+            echo "Check the logs above for details"
           fi
