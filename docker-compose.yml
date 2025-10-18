@@ -1,92 +1,77 @@
-version: '3.8'
-
 services:
-  # PostgreSQL Database
-  postgres:
+  # PostgreSQL Database for AutoFix (port 5433)
+  autofix-postgres:
     image: postgres:15-alpine
-    container_name: garage_platform_postgres
+    container_name: autofix_postgres_prod
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_DATABASE:-garage_platform}
-      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - autofix_postgres_data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
+    networks:
+      - autofix-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - garage_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # Backend API
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: garage_platform_backend
+  # Backend API - Uses pre-built image from CI/CD
+  autofix-backend:
+    image: autofix-backend:latest
+    container_name: autofix_backend_prod
     restart: unless-stopped
-    environment:
-      NODE_ENV: production
-      PORT: 4000
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USERNAME: ${DB_USERNAME:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_DATABASE: ${DB_DATABASE:-garage_platform}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-${JWT_SECRET}}
-      FRONTEND_URL: ${FRONTEND_URL:-https://autofix.tn}
+    depends_on:
+      autofix-postgres:
+        condition: service_healthy
     ports:
       - "4000:4000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    networks:
-      - garage_network
-
-  # Frontend Application
-  frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://backend.autofix.tn/api}
-    container_name: garage_platform_frontend
-    restart: unless-stopped
     environment:
-      NODE_ENV: production
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://backend.autofix.tn/api}
-      NEXT_PUBLIC_APP_NAME: "AutoFix - Garage Platform"
-      PORT: 4001
-    ports:
-      - "4001:4001"
-    depends_on:
-      backend:
-        condition: service_healthy
+      - NODE_ENV=production
+      - PORT=4000
+      - DB_HOST=autofix-postgres
+      - DB_PORT=5432
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+    networks:
+      - autofix-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4001"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    networks:
-      - garage_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "app=autofix-backend"
+      - "version=1.0"
 
 volumes:
-  postgres_data:
+  autofix_postgres_data:
     driver: local
 
 networks:
-  garage_network:
+  autofix-network:
     driver: bridge
