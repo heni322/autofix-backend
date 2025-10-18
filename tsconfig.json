@@ -20,8 +20,9 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
-    "isolatedModules": false,
-    "lib": ["ES2021"]
+    "strict": false,
+    "noEmit": false,
+    "allowJs": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
