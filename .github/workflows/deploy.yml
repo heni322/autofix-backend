@@ -101,38 +101,52 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          source: "autofix-backend.tar.gz,docker-compose.prod.yml"
+          source: "autofix-backend.tar.gz,docker-compose.yml"
           target: ${{ env.DEPLOY_PATH }}
           overwrite: true
           rm: false
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
+          envs: DB_HOST,DB_PORT,DB_USERNAME,DB_PASSWORD,DB_DATABASE,JWT_SECRET,JWT_REFRESH_SECRET,FRONTEND_URL,SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASS
           script: |
             cd ${{ env.DEPLOY_PATH }}
             
-            # Create .env.production with secrets (done on VPS for security)
-            cat > .env.production << 'ENVEOF'
-            DB_HOST=${{ secrets.DB_HOST }}
-            DB_PORT=${{ secrets.DB_PORT }}
-            DB_USERNAME=${{ secrets.DB_USERNAME }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_DATABASE=${{ secrets.DB_DATABASE }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
-            FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+            # Create .env.production with secrets passed as environment variables
+            cat > .env.production << EOF
+            DB_HOST=$DB_HOST
+            DB_PORT=$DB_PORT
+            DB_USERNAME=$DB_USERNAME
+            DB_PASSWORD=$DB_PASSWORD
+            DB_DATABASE=$DB_DATABASE
+            JWT_SECRET=$JWT_SECRET
+            JWT_REFRESH_SECRET=$JWT_REFRESH_SECRET
+            FRONTEND_URL=$FRONTEND_URL
             PORT=4000
             NODE_ENV=production
-            SMTP_HOST=${{ secrets.SMTP_HOST }}
-            SMTP_PORT=${{ secrets.SMTP_PORT }}
-            SMTP_USER=${{ secrets.SMTP_USER }}
-            SMTP_PASS=${{ secrets.SMTP_PASS }}
-            ENVEOF
+            SMTP_HOST=$SMTP_HOST
+            SMTP_PORT=$SMTP_PORT
+            SMTP_USER=$SMTP_USER
+            SMTP_PASS=$SMTP_PASS
+            EOF
             
             # Verify env file was created
             if [ ! -f .env.production ]; then
