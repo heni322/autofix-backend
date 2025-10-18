@@ -12,13 +12,25 @@ done
 
 echo "✅ Database is up!"
 
-# Run migrations
+# Run migrations using compiled JavaScript
 echo "🗄️  Running database migrations..."
-if npm run migration:run; then
-  echo "✅ Migrations completed successfully"
-else
-  echo "⚠️  Migration failed or no pending migrations"
-fi
+cd /app
+node -e "
+const { AppDataSource } = require('./dist/database/data-source');
+
+AppDataSource.initialize()
+  .then(async () => {
+    console.log('Data Source initialized');
+    await AppDataSource.runMigrations();
+    console.log('✅ Migrations completed successfully');
+    await AppDataSource.destroy();
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('❌ Migration failed:', error);
+    process.exit(1);
+  });
+"
 
 # Start the application
 echo "🎯 Starting application..."

@@ -13,7 +13,7 @@ const AppDataSource = new DataSource({
   port: parseInt(process.env.DB_PORT || '5432', 10),
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
-  database: process.env.DB_DATABASE || 'garage_platform',
+  database: process.env.DB_NAME || process.env.DB_DATABASE || 'garage_platform',
   entities: [path.join(__dirname, '../entities/**/*.entity{.ts,.js}')],
   synchronize: false,
 });
