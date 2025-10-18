@@ -4,6 +4,9 @@ export class InitialSchema1729261200000 implements MigrationInterface {
   name = 'InitialSchema1729261200000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // IMPORTANT: Enable UUID extension FIRST before creating any tables
+    await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
+
     // Create users table
     await queryRunner.query(`
       CREATE TABLE "users" (
@@ -190,9 +193,6 @@ export class InitialSchema1729261200000 implements MigrationInterface {
     await queryRunner.query(`CREATE INDEX "IDX_reviews_customer" ON "reviews" ("customerId")`);
     await queryRunner.query(`CREATE INDEX "IDX_notifications_user" ON "notifications" ("userId")`);
     await queryRunner.query(`CREATE INDEX "IDX_notifications_read" ON "notifications" ("isRead")`);
-
-    // Enable UUID extension
-    await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
@@ -223,5 +223,8 @@ export class InitialSchema1729261200000 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE "services"`);
     await queryRunner.query(`DROP TABLE "categories"`);
     await queryRunner.query(`DROP TABLE "users"`);
+    
+    // Drop UUID extension
+    await queryRunner.query(`DROP EXTENSION IF EXISTS "uuid-ossp"`);
   }
 }
