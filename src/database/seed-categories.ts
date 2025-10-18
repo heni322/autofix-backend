@@ -43,4 +43,4 @@ async function runCategorySeeder() {
   }
 }
 
-runCategorySeeder();
+void runCategorySeeder();

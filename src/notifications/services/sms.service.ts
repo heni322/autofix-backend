@@ -6,14 +6,14 @@ export class SmsService {
 
   constructor() {}
 
-  async sendReservationConfirmation(reservation: any): Promise<void> {
+  sendReservationConfirmation(reservation: any): void {
     const message = `Réservation confirmée chez ${reservation.garage.name} le ${new Date(reservation.timeSlot).toLocaleDateString('fr-FR')}`;
 
     this.logger.log(`SMS sent to ${reservation.user.phone}: ${message}`);
     // Implement actual SMS sending with Twilio, AWS SNS, etc.
   }
 
-  async sendQuoteNotification(reservation: any): Promise<void> {
+  sendQuoteNotification(reservation: any): void {
     const message = `Votre devis de ${reservation.price}€ est prêt chez ${reservation.garage.name}`;
 
     this.logger.log(`SMS sent to ${reservation.user.phone}: ${message}`);

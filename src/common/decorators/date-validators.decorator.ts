@@ -23,7 +23,7 @@ export class IsFutureDateConstraint implements ValidatorConstraintInterface {
       const bufferTime = new Date(now.getTime() + bufferMinutes * 60000);
 
       return date > bufferTime;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -34,7 +34,7 @@ export class IsFutureDateConstraint implements ValidatorConstraintInterface {
 }
 
 export function IsFutureDate(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
       propertyName: propertyName,
@@ -55,7 +55,7 @@ export class IsBusinessDayConstraint implements ValidatorConstraintInterface {
       // 0 = Sunday, 6 = Saturday
       // Most businesses are closed on Sunday (0) and possibly Saturday (6)
       return dayOfWeek !== 0; // Allow Monday-Saturday, block Sunday
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -66,7 +66,7 @@ export class IsBusinessDayConstraint implements ValidatorConstraintInterface {
 }
 
 export function IsBusinessDay(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
       propertyName: propertyName,
@@ -88,7 +88,7 @@ export class IsWithinDaysConstraint implements ValidatorConstraintInterface {
       const maxDate = new Date(now.getTime() + maxDays * 24 * 60 * 60 * 1000);
 
       return date <= maxDate;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -103,7 +103,7 @@ export function IsWithinDays(
   days: number,
   validationOptions?: ValidationOptions,
 ) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
       propertyName: propertyName,

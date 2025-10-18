@@ -48,4 +48,4 @@ async function runSeed() {
   }
 }
 
-runSeed();
+void runSeed();

@@ -16,11 +16,11 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.userService.findByEmail(email);
 
-    if (user && (await bcrypt.compare(password, user.password))) {
-      const { password, ...result } = user;
+    if (user && (await bcrypt.compare(pass, user.password))) {
+      const { password: _password, ...result } = user;
       return result;
     }
 
@@ -86,7 +86,7 @@ export class AuthService {
     return this.signUp(userData);
   }
 
-  async login(user: any) {
+  login(user: any) {
     return this.generateToken(user);
   }
 }

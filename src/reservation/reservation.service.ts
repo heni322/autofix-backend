@@ -343,7 +343,7 @@ export class ReservationService {
             available: availability.available,
             remainingSlots: availability.remainingSlots,
           });
-        } catch (error) {
+        } catch {
           // Skip if service not available
           continue;
         }

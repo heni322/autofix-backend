@@ -83,4 +83,4 @@ async function cleanGarages() {
   }
 }
 
-cleanGarages();
+void cleanGarages();
